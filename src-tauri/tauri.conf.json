@@ -1,0 +1,63 @@
+{
+  "$schema": "https://v2.tauri.app/schemas/config.schema.json",
+  "build": {
+    "frontendDist": "../frontend"
+  },
+  "productName": "Synapse Cortana",
+  "version": "0.1.0",
+  "identifier": "com.synapsecortana.app",
+  "app": {
+    "withGlobalTauri": true,
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "label": "chat",
+        "title": "Synapse Cortana - Chat",
+        "width": 500,
+        "height": 700,
+        "minWidth": 420,
+        "minHeight": 500,
+        "resizable": true,
+        "maximizable": true,
+        "minimizable": true,
+        "center": true,
+        "url": "index.html"
+      },
+      {
+        "label": "avatar",
+        "title": "Synapse Cortana - Avatar",
+        "width": 200,
+        "height": 500,
+        "decorations": false,
+        "transparent": true,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "skipTaskbar": true,
+        "url": "avatar.html"
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["appimage", "deb"],
+    "icon": ["icons/128x128.png", "icons/512x512.png"],
+    "resources": [
+      "resources/voices/es_AR-daniela-high",
+      "resources/stt-models/sherpa-onnx-whisper-medium",
+      "resources/gstreamer-plugins.tar"
+    ],
+    "linux": {
+      "deb": {
+        "depends": [
+          "libwebkit2gtk-4.1-0",
+          "libgtk-3-0",
+          "gstreamer1.0-plugins-base",
+          "gstreamer1.0-plugins-good"
+        ]
+      }
+    }
+  }
+}

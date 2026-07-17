@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permisos por defecto de las ventanas de SynapseCortana (chat + avatar). Habilita los comandos IPC que el frontend invoca desde app.js y avatar.js (gateway + TTS + STT + avatar + window management).",
+  "windows": ["chat", "avatar"],
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "core:window:default",
+    "core:webview:default",
+    "core:app:default"
+  ]
+}

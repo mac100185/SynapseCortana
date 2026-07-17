@@ -1,0 +1,48 @@
+[package]
+name = "synapse-cortana"
+version = "0.1.0"
+description = "FASE 1: Canal de conexión con OpenClaw - Avatar holográfico de Cortana"
+authors = ["SynapseCortana"]
+edition = "2021"
+default-run = "synapse-cortana"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = "0.21"
+futures-util = "0.3"
+reqwest = { version = "0.11", features = ["json", "stream"] }
+hound = "3.5"
+
+# Device identity (Ed25519) para autenticar el handshake con OpenClaw.
+ed25519-dalek = { version = "2", features = ["rand_core", "pkcs8", "pem"] }
+pkcs8 = { version = "0.10", features = ["std", "pem"] }
+rand = "0.8"
+sha2 = "0.10"
+base64 = "0.22"
+hex = "0.4"
+directories = "5"
+
+# TTS local open source (FASE 2). sherpa-onnx carga modelos Piper/VITS.
+sherpa-onnx = "1.13"
+
+# Logging controlado por RUST_LOG (variable de entorno).
+# Uso: `RUST_LOG=debug ./synapse-cortana` o `RUST_LOG=synapse_cortana=trace ...`.
+env_logger = "0.11"
+log = "0.4"
+
+# STT local open source (FASE 2.4.C): captura de micrófono multiplataforma.
+# En Linux requiere `libasound2-dev` (ALSA).
+cpal = "0.15"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

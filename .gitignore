@@ -1,0 +1,33 @@
+# Build artifacts
+src-tauri/target/
+src-tauri/gen/
+
+# Modelos pre-empaquetados (demasiado grandes para git, se descargan con tools/download_models.sh)
+src-tauri/resources/voices/
+src-tauri/resources/stt-models/
+src-tauri/resources/gstreamer-plugins.tar
+
+# Entorno Python de herramientas
+tools/.venv/
+
+# Archivos temporales
+*.wav
+*.tar.bz2
+*.tar
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Config local (no subir tokens)
+# Los settings se generan en runtime en ~/.config/synapse-cortana/

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Synapse Cortana - Avatar</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                width: 100%;
+                height: 100%;
+                background: transparent;
+                overflow: hidden;
+                user-select: none;
+                -webkit-user-select: none;
+            }
+            #avatar-canvas {
+                width: 100vw;
+                height: 100vh;
+                display: block;
+                cursor: pointer;
+            }
+            #loading {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: rgba(30, 144, 255, 0.8);
+                font-family: system-ui, sans-serif;
+                font-size: 14px;
+                text-align: center;
+            }
+            #loading .spinner {
+                width: 32px;
+                height: 32px;
+                border: 3px solid rgba(30, 144, 255, 0.2);
+                border-top-color: rgba(30, 144, 255, 0.8);
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+                margin: 0 auto 8px;
+            }
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+            #state-indicator {
+                position: absolute;
+                bottom: 8px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-family: system-ui, sans-serif;
+                font-size: 11px;
+                pointer-events: none;
+                padding: 2px 8px;
+                border-radius: 8px;
+                background: rgba(0, 0, 0, 0.3);
+                transition:
+                    color 0.3s,
+                    background 0.3s;
+            }
+            #state-indicator.state-idle {
+                color: rgba(150, 150, 150, 0.8);
+            }
+            #state-indicator.state-listening {
+                color: rgba(255, 200, 50, 0.9);
+                background: rgba(80, 60, 0, 0.3);
+            }
+            #state-indicator.state-thinking {
+                color: rgba(100, 200, 255, 0.9);
+                background: rgba(0, 60, 80, 0.3);
+            }
+            #state-indicator.state-speaking {
+                color: rgba(100, 255, 150, 0.9);
+                background: rgba(0, 80, 40, 0.3);
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="avatar-canvas"></canvas>
+        <div id="loading">
+            <div class="spinner"></div>
+            <div>Cargando avatar...</div>
+        </div>
+        <div id="state-indicator" class="state-idle">En espera</div>
+        <script type="module">
+            // Fallback: si avatar.js falla al cargar, mostrar error.
+            window.addEventListener("error", (e) => {
+                console.error("[avatar] Error global:", e);
+                const loading = document.getElementById("loading");
+                if (loading) {
+                    loading.innerHTML =
+                        "<div>⚠️ Error: " +
+                        (e.message || "desconocido") +
+                        "</div>";
+                }
+            });
+        </script>
+        <script type="module" src="avatar.js"></script>
+    </body>
+</html>
