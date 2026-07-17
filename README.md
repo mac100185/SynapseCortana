@@ -156,7 +156,13 @@ sudo apt install libwebkit2gtk-4.1-dev libasound2-dev pkg-config librsvg2-dev
 
 ```bash
 git clone https://github.com/usuario/SynapseCortana.git
-cd SynapseCortana/src-tauri
+cd SynapseCortana
+
+# IMPORTANTE: descargar modelos TTS + STT + GStreamer antes de compilar
+# Esto descarga ~1 GB de modelos necesarios para que la app funcione 100% offline
+./tools/download_models.sh
+
+cd src-tauri
 cargo build --release
 ```
 
@@ -168,6 +174,8 @@ cargo tauri build
 # Output: target/release/bundle/appimage/*.AppImage
 #         target/release/bundle/deb/*.deb
 ```
+
+> **Nota**: `download_models.sh` solo necesita ejecutarse una vez. Los modelos se guardan en `src-tauri/resources/` y no se suben a git (están en `.gitignore`). Sin estos modelos, la app descargará de internet en el primer uso (~1 GB).
 
 ## Documentación
 
