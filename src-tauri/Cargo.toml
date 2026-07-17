@@ -2,7 +2,7 @@
 name = "synapse-cortana"
 version = "0.1.0"
 description = "FASE 1: Canal de conexión con OpenClaw - Avatar holográfico de Cortana"
-authors = ["SynapseCortana"]
+authors = ["Alan Mac-Arthur García Díaz"]
 edition = "2021"
 default-run = "synapse-cortana"
 

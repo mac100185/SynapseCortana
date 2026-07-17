@@ -387,4 +387,4 @@ Resultado: un instalador de ~310 MB que funciona 100% offline, sin descargas, si
 
 ## Autor
 
-SynapseCortana 2026
+Alan Mac-Arthur García Díaz — 2026

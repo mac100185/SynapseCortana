@@ -227,4 +227,4 @@ ssh -L 18789:127.0.0.1:18789 cortana@192.168.1.59 -N
 
 ## Autor
 
-SynapseCortana 2026
+Alan Mac-Arthur García Díaz — 2026

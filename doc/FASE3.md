@@ -534,4 +534,4 @@ tools/
 
 ## Autor
 
-SynapseCortana 2026
+Alan Mac-Arthur García Díaz — 2026

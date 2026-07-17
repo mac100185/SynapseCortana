@@ -892,4 +892,4 @@ FASE 2.5 agrupa tres mejoras de **rendimiento** aplicadas sobre el TTS de FASE 2
 
 ## Autor
 
-SynapseCortana 2026
+Alan Mac-Arthur García Díaz — 2026

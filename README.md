@@ -466,4 +466,4 @@ GNU General Public License v3.0. Ver [LICENSE](LICENSE) para más detalles.
 
 ## Autor
 
-SynapseCortana 2026
+Alan Mac-Arthur García Díaz — 2026
