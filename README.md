@@ -28,19 +28,22 @@ Inspirado en la naturaleza simbiótica de Cortana en la Silver Timeline de Halo,
 
 ## Guía rápida para usuarios
 
-### Opción A — Usar el AppImage precompilado (recomendado)
+### Opción A — Descargar el AppImage (recomendado, sin compilar)
 
-1. **Descargar** el archivo `Synapse Cortana_0.1.0_amd64.AppImage` desde la página de [Releases](https://github.com/usuario/SynapseCortana/releases)
-2. **Dar permisos de ejecución**:
+1. Ir a la página de [Releases](https://github.com/usuario/SynapseCortana/releases) del repositorio
+2. Descargar `Synapse Cortana_0.1.0_amd64.AppImage` (771 MB, incluye todo: voz TTS + modelo STT + plugins de audio)
+3. **Dar permisos de ejecución**:
    ```bash
    chmod +x "Synapse Cortana_0.1.0_amd64.AppImage"
    ```
-3. **Ejecutar**:
+4. **Ejecutar**:
    ```bash
-   ./"Synapse Cortana_0.1.0_amd64.AppImage"
+   .//"Synapse Cortana_0.1.0_amd64.AppImage"
    ```
 
-Sin necesidad de `sudo`, sin dependencias externas, sin descargas de internet.
+Sin necesidad de `sudo`, sin dependencias externas, sin descargas de internet. El AppImage incluye todos los modelos pre-empaquetados.
+
+> **Nota**: Si no encuentras el AppImage en Releases, puedes compilarlo desde código fuente (ver sección [Guía para desarrolladores](#guía-para-desarrolladores) más abajo).
 
 ### Opción B — Conectar a un gateway OpenClaw remoto mediante túnel SSH
 
@@ -353,6 +356,7 @@ SynapseCortana/
 
 ## Documentación
 
+- [📖 Manual de Usuario](doc/MANUAL.md) — **Guía completa de la interfaz gráfica**: todas las opciones del chat, controles del avatar, flujo por voz, flujo por chat, solución de problemas
 - [FASE 1: El Cascarón Conectivo](doc/FASE1.md) — WebSocket + handshake
 - [FASE 2: La Voz de Cortana](doc/FASE2.md) — TTS + STT + chat + UX
 - [FASE 3: El Cuerpo Holográfico](doc/FASE3.md) — Avatar 3D + interacción
