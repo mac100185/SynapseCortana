@@ -152,7 +152,7 @@ cd src-tauri
 cargo build --release
 ```
 
-#### Generar instaladores
+#### Generar instaladores (Linux)
 
 ```bash
 cargo install tauri-cli --version "^2"
@@ -162,6 +162,102 @@ cargo tauri build
 ```
 
 > **Nota**: `download_models.sh` solo necesita ejecutarse una vez. Los modelos se guardan en `src-tauri/resources/` y no se suben a git (están en `.gitignore`). Sin estos modelos, la app descargará de internet en el primer uso (~1 GB).
+
+### Compilación para Windows
+
+#### Prerequisitos (Windows)
+
+1. **Instalar [Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)** — seleccionar "Desktop development with C++"
+2. **Instalar [Rust](https://rustup.rs/)** — descargar y ejecutar `rustup-init.exe`
+3. **Instalar [Node.js](https://nodejs.org/)** 18+ (necesario para algunas herramientas de Tauri)
+4. **Instalar [Git](https://git-scm.com/)**
+
+#### Build (Windows)
+
+```powershell
+git clone https://github.com/mac100185/SynapseCortana.git
+cd SynapseCortana
+
+# Descargar modelos (requiere bash — usar Git Bash o WSL):
+bash tools/download_models.sh
+
+# Compilar:
+cd src-tauri
+cargo build --release
+```
+
+#### Generar instalador (Windows)
+
+```powershell
+cargo install tauri-cli --version "^2"
+cargo tauri build --bundles nsis
+# Output: target/release/bundle/nsis/Synapse Cortana_0.1.0_x64-setup.exe
+```
+
+El instalador NSIS no requiere privilegios de administrador. Se instala como aplicación de usuario.
+
+> **Importante para Windows**:
+> - El script `download_models.sh` requiere **Git Bash** o **WSL** para ejecutarse en Windows.
+> - Alternativa: descargar manualmente los modelos desde los enlaces en `tools/download_models.sh` y colocarlos en `src-tauri/resources/voices/es_AR-daniela-high/` y `src-tauri/resources/stt-models/sherpa-onnx-whisper-medium/`.
+> - Los plugins de GStreamer no son necesarios en Windows (Tauri usa WebView2 que incluye su propio motor de audio).
+> - Windows 10/11 incluye WebView2 por defecto. Si no, descargarlo desde [aka.ms/webview2](https://go.microsoft.com/fwlink/p/?LinkId=2124705).
+
+### Compilación para macOS
+
+#### Prerequisitos (macOS)
+
+1. **Instalar Xcode Command Line Tools**:
+   ```bash
+   xcode-select --install
+   ```
+2. **Instalar [Rust](https://rustup.rs/)**:
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
+3. **Instalar [Homebrew](https://brew.sh/)** (si no está instalado)
+
+#### Build (macOS)
+
+```bash
+git clone https://github.com/mac100185/SynapseCortana.git
+cd SynapseCortana
+
+# Descargar modelos
+./tools/download_models.sh
+
+# Compilar
+cd src-tauri
+cargo build --release
+```
+
+#### Generar instalador (macOS)
+
+```bash
+cargo install tauri-cli --version "^2"
+
+# Para Apple Silicon (M1/M2/M3):
+cargo tauri build --target aarch64-apple-darwin --bundles dmg
+# Output: target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+
+# Para Intel:
+cargo tauri build --target x86_64-apple-darwin --bundles dmg
+# Output: target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+```
+
+El archivo `.dmg` se arrastra a la carpeta Aplicaciones para instalar. No requiere permisos especiales.
+
+> **Nota para macOS**:
+> - Los plugins de GStreamer no son necesarios en macOS (Tauri usa WebKit nativo de macOS que incluye su propio motor de audio).
+> - El script `download_models.sh` copiará los plugins de GStreamer del sistema si existen, pero en macOS no se usan.
+> - Para crear un binario universal (Apple Silicon + Intel): `cargo tauri build --target universal-apple-darwin --bundles dmg`
+
+### Resumen de plataformas
+
+| Plataforma | Prerequisitos | Instalador | Tamaño aprox. |
+|------------|--------------|-----------|---------------|
+| Linux | `libwebkit2gtk-4.1-dev`, `libasound2-dev`, `pkg-config`, `librsvg2-dev` | AppImage + DEB | ~771 MB |
+| Windows | Visual Studio C++ Build Tools, WebView2 | NSIS .exe | ~500 MB |
+| macOS | Xcode Command Line Tools | .dmg | ~550 MB |
 
 ### Tests
 
