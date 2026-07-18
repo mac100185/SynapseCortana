@@ -591,8 +591,11 @@ impl SttEngine {
 
         // Despachar por tipo de motor.
         let (engine_kind, online, online_config, offline_arc, offline_config, sample_rate) =
-            if model_id == "sherpa-onnx-whisper-tiny" || model_id == "sherpa-onnx-whisper-base" {
-                let (rec, cfg) = build_offline_whisper(&dir, model_id)?;
+            if model_id.contains("whisper") {
+                // Cualquier modelo Whisper (tiny, base, medium) usa
+                // el OfflineRecognizer. El prefijo de archivos se
+                // detecta dentro de build_offline_whisper.
+                let (rec, cfg) = build_offline_whisper(&dir, model_id)?;;
                 // Cachear el recognizer en `Arc` para que el primer
                 // `stt_start` no tenga que crearlo (ahorra ~500 ms).
                 let offline_arc = Some(Arc::new(rec));

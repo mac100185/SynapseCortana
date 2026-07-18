@@ -829,13 +829,13 @@ async function saveSettingsNow() {
       // inválido, usamos los defaults (1500 / 30000 ms).
       silence_timeout_ms: parseIntOr(
         elements.silenceTimeoutMs ? elements.silenceTimeoutMs.value : "",
-        1500,
+        3000,
         500,
         10000,
       ),
       overall_timeout_ms: parseIntOr(
         elements.overallTimeoutMs ? elements.overallTimeoutMs.value : "",
-        30000,
+        120000,
         5000,
         300000,
       ),
@@ -877,9 +877,9 @@ async function loadAndApplySettings() {
     if (s.stt_model_id) elements.sttModel.value = s.stt_model_id;
     // FASE 2.5: timeouts configurables.
     if (elements.silenceTimeoutMs)
-      elements.silenceTimeoutMs.value = s.silence_timeout_ms ?? 1500;
+      elements.silenceTimeoutMs.value = s.silence_timeout_ms ?? 3000;
     if (elements.overallTimeoutMs)
-      elements.overallTimeoutMs.value = s.overall_timeout_ms ?? 30000;
+      elements.overallTimeoutMs.value = s.overall_timeout_ms ?? 120000;
     if (s.last_tab) switchTab(s.last_tab);
   } catch (e) {
     console.error("[SynapseCortana] get_settings:", e);
@@ -946,8 +946,8 @@ async function sendMessage() {
         result = await invoke("chat_and_speak", {
           message,
           voiceId: state.selectedVoice,
-          silenceTimeoutMs: 2000,
-          overallTimeoutMs: 30000,
+          // No pasar timeouts explícitos: el backend lee de settings.
+          // Antes enviábamos 2000/30000 que cortaba respuestas largas.
         });
       } finally {
         streamState.ignoreKeys.delete(sessionKeyPlaceholder);
