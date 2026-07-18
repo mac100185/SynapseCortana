@@ -692,10 +692,15 @@ fn build_offline_whisper(
     model_id: &str,
 ) -> Result<(OfflineRecognizer, OfflineRecognizerConfig), String> {
     // Determinar el prefijo de archivo según el modelo.
-    let prefix = if model_id == "sherpa-onnx-whisper-base" {
+    let prefix = if model_id.contains("medium") {
+        "medium"
+    } else if model_id.contains("base") {
         "base"
-    } else {
+    } else if model_id.contains("tiny") {
         "tiny"
+    } else {
+        // Fallback: intentar con "base".
+        "base"
     };
     // Whisper usa `{prefix}-tokens.txt` en vez de `tokens.txt`.
     let tokens = if dir.join(format!("{prefix}-tokens.txt")).exists() {
