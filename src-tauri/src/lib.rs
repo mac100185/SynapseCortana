@@ -281,6 +281,10 @@ pub struct AppState {
     /// Settings actuales (cacheados en memoria para acceso rápido
     /// desde los handlers Tauri sin re-leer el disco).
     pub settings: Arc<Mutex<AppSettings>>,
+    /// Flag que indica que `chat_and_speak` está activo y drenando el
+    /// inbox. Cuando está activo, `poll_gateway_events` devuelve vacío
+    /// para evitar que el frontend robe eventos del backend.
+    pub chat_and_speak_active: Arc<Mutex<bool>>,
 }
 
 impl Default for AppState {
@@ -353,6 +357,7 @@ impl Default for AppState {
             tts: tts_engine,
             stt: Arc::new(SttEngine::new()),
             settings: Arc::new(Mutex::new(settings)),
+            chat_and_speak_active: Arc::new(Mutex::new(false)),
         }
     }
 }
@@ -1105,6 +1110,17 @@ async fn send_message_to_gateway(
 /// para mostrar respuestas que llegaron mientras la UI no estaba activa.
 #[tauri::command]
 fn poll_gateway_events(state: State<'_, AppState>) -> Vec<GatewayEvent> {
+    // Si chat_and_speak está activo, NO drenar el inbox. El backend
+    // necesita todos los eventos para acumular el texto de la respuesta
+    // del LLM. Si el frontend los roba, el texto se trunca/pierde.
+    let active = state
+        .chat_and_speak_active
+        .lock()
+        .map(|g| *g)
+        .unwrap_or(false);
+    if active {
+        return Vec::new();
+    }
     let mut inbox = state.inbox.lock().expect("inbox poisoned");
     std::mem::take(&mut *inbox)
 }
@@ -1258,6 +1274,16 @@ async fn chat_and_speak(
         id
     };
 
+    // Marcar que chat_and_speak está activo para que poll_gateway_events
+    // no drene el inbox y robe eventos.
+    {
+        let mut flag = state
+            .chat_and_speak_active
+            .lock()
+            .map_err(|e| e.to_string())?;
+        *flag = true;
+    }
+
     // 2) Esperar eventos del inbox.
     let overall_deadline = Instant::now() + Duration::from_millis(overall_ms);
     let mut last_event_at = Instant::now();
@@ -1320,6 +1346,14 @@ async fn chat_and_speak(
     }
 
     let agent_text = accumulated_text.trim().to_string();
+    // Limpiar el flag: chat_and_speak ya no está activo.
+    {
+        let mut flag = state
+            .chat_and_speak_active
+            .lock()
+            .map_err(|e| e.to_string())?;
+        *flag = false;
+    }
     if agent_text.is_empty() && !done_event_seen {
         return Err("el agente no devolvió texto".to_string());
     }

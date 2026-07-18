@@ -580,6 +580,18 @@ impl SttEngine {
     ///   - `sherpa-onnx-streaming-zipformer-en` → `OnlineRecognizer` (streaming).
     ///   - `sherpa-onnx-whisper-tiny` → `OfflineRecognizer` (Whisper).
     pub async fn set_model(&self, model_id: &str) -> Result<SttStatus, String> {
+        // Verificar si el modelo ya está cargado. Si es el mismo model_id,
+        // saltar la recarga (ahorra ~15s en modelos Whisper medium).
+        {
+            let guard = self.inner.lock().await;
+            if let Some(inner) = guard.as_ref() {
+                if inner.model_id == model_id && inner.offline_arc.is_some() {
+                    // Modelo ya cargado, retornar status sin recargar.
+                    return Ok(self.status().await);
+                }
+            }
+        }
+
         let spec = stt_model_by_id(model_id)
             .ok_or_else(|| format!("modelo STT desconocido: {model_id}"))?;
 
@@ -592,10 +604,7 @@ impl SttEngine {
         // Despachar por tipo de motor.
         let (engine_kind, online, online_config, offline_arc, offline_config, sample_rate) =
             if model_id.contains("whisper") {
-                // Cualquier modelo Whisper (tiny, base, medium) usa
-                // el OfflineRecognizer. El prefijo de archivos se
-                // detecta dentro de build_offline_whisper.
-                let (rec, cfg) = build_offline_whisper(&dir, model_id)?;;
+                let (rec, cfg) = build_offline_whisper(&dir, model_id)?;
                 // Cachear el recognizer en `Arc` para que el primer
                 // `stt_start` no tenga que crearlo (ahorra ~500 ms).
                 let offline_arc = Some(Arc::new(rec));
