@@ -28,7 +28,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use futures_util::StreamExt;
-use log::{debug, error, info, warn};
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex as AsyncMutex;
 
@@ -244,7 +244,7 @@ pub async fn ensure_voice_downloaded(voice: &VoiceSpec) -> Result<DownloadOutcom
     // Esto previene que la pre-carga (background) y el frontend
     // (tts_set_voice) ejecuten ensure_voice_downloaded simultáneamente.
     let _lock = VOICE_LOAD_LOCK.lock().await;
-    let dir = voice_dir(&voice.id)
+    let dir = voice_dir(voice.id)
         .ok_or_else(|| "no se pudo resolver config_dir para cachear voces".to_string())?;
     let onnx = dir.join(format!("{}.onnx", voice.id));
     let tokens = dir.join("tokens.txt");
@@ -266,7 +266,7 @@ pub async fn ensure_voice_downloaded(voice: &VoiceSpec) -> Result<DownloadOutcom
     // FASE 3 distribución: intentar copiar desde el bundle (offline)
     // antes de descargar de internet.
     std::fs::create_dir_all(&dir).map_err(|e| format!("creando {}: {e}", dir.display()))?;
-    if copy_voice_from_bundle(&voice.id, &dir) {
+    if copy_voice_from_bundle(voice.id, &dir) {
         // Verificar que la copia fue exitosa.
         if onnx.exists() && tokens.exists() && espeak_data.is_dir() {
             info!("[tts] voz '{}' copiada desde el bundle", voice.id);
@@ -440,11 +440,11 @@ impl TtsEngine {
             .ok_or_else(|| format!("voz desconocida: {voice_id}"))?
             .clone();
         ensure_voice_downloaded(&voice).await?;
-        let onnx = voice_onnx_path(&voice.id)
+        let onnx = voice_onnx_path(voice.id)
             .ok_or_else(|| "no se pudo resolver ruta del modelo".to_string())?;
-        let tokens = voice_tokens_path(&voice.id)
+        let tokens = voice_tokens_path(voice.id)
             .ok_or_else(|| "no se pudo resolver ruta de tokens".to_string())?;
-        let espeak_data = voice_espeak_data_path(&voice.id)
+        let espeak_data = voice_espeak_data_path(voice.id)
             .ok_or_else(|| "no se pudo resolver ruta de espeak-ng-data".to_string())?;
         let config = OfflineTtsConfig {
             model: OfflineTtsModelConfig {

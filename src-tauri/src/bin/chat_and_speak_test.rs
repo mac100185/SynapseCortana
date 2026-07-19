@@ -180,7 +180,7 @@ async fn main() {
         "method": "connect",
         "params": connect_params
     });
-    ws.send(Message::Text(connect_frame.to_string().into()))
+    ws.send(Message::Text(connect_frame.to_string()))
         .await
         .expect("enviar connect");
 
@@ -230,7 +230,7 @@ async fn main() {
         }
     });
     let sent_at = Instant::now();
-    ws.send(Message::Text(chat_frame.to_string().into()))
+    ws.send(Message::Text(chat_frame.to_string()))
         .await
         .expect("enviar chat.send");
     eprintln!("[chat-test] chat.send enviado (id={req_id})");

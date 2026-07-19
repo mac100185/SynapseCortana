@@ -11,10 +11,7 @@
 // Loguea TODOS los eventos que llegan (event, payload keys, fragmentos
 // de texto). Útil para diagnosticar el modo `ui`.
 
-use ed25519_dalek::{Signature, Signer, SigningKey};
 use futures_util::{SinkExt, StreamExt};
-use rand::rngs::OsRng;
-use sha2::{Digest, Sha256};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio_tungstenite::{
     connect_async,
@@ -176,7 +173,7 @@ async fn main() {
         "method": "connect",
         "params": connect_params
     });
-    ws.send(Message::Text(connect_frame.to_string().into()))
+    ws.send(Message::Text(connect_frame.to_string()))
         .await
         .expect("enviar connect");
 
@@ -243,7 +240,7 @@ async fn main() {
         }
     });
     let sent_at = Instant::now();
-    ws.send(Message::Text(chat_frame.to_string().into()))
+    ws.send(Message::Text(chat_frame.to_string()))
         .await
         .expect("enviar chat.send");
     eprintln!("[ui-test] chat.send enviado (id={req_id}, sessionKey={session_key}, idempotencyKey={idempotency_key})");

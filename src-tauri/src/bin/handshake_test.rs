@@ -2,7 +2,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use base64::Engine as _;
-use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
+use ed25519_dalek::{Signature, Signer, SigningKey};
 use futures_util::{SinkExt, StreamExt};
 use sha2::{Digest, Sha256};
 use tokio_tungstenite::{
@@ -120,7 +120,7 @@ async fn main() {
     });
     let text = serde_json::to_string(&connect).unwrap();
     eprintln!("[test] Enviando connect ({} bytes)...", text.len());
-    ws.send(Message::Text(text.into()))
+    ws.send(Message::Text(text))
         .await
         .expect("send connect");
 

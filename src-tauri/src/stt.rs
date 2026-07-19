@@ -35,7 +35,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use log::{debug, error, info, warn};
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use sherpa_onnx::{
     OfflineRecognizer, OfflineRecognizerConfig, OnlineRecognizer, OnlineRecognizerConfig,
@@ -473,17 +473,15 @@ pub struct SttStatus {
 /// que podemos envolverlo en `Arc` y compartirlo entre el `stt_set_model`
 /// y el `stt_start` sin necesidad de recrearlo cada vez (ahorra ~500 ms
 /// de latencia en el primer 🎙️).
-struct SttInner {
-    model_id: String,
-    engine_kind: SttEngineKind,
-    /// Streaming Zipformer Transducer (latencia <300 ms).
-    online: Option<OnlineRecognizer>,
-    online_config: Option<OnlineRecognizerConfig>,
+pub struct SttInner {
+    pub(crate) model_id: String,
+    pub(crate) engine_kind: SttEngineKind,
+    pub(crate) online_config: Option<OnlineRecognizerConfig>,
     /// Offline Whisper (latencia ~1-3 s por utterance, multilingüe nativo).
     /// **Cacheado como `Arc`** para evitar recrearlo en cada `stt_start`.
-    offline_arc: Option<Arc<OfflineRecognizer>>,
-    offline_config: Option<OfflineRecognizerConfig>,
-    sample_rate: u32,
+    pub(crate) offline_arc: Option<Arc<OfflineRecognizer>>,
+    pub(crate) offline_config: Option<OfflineRecognizerConfig>,
+    pub(crate) sample_rate: u32,
 }
 
 /// Snapshot ligero del estado del motor STT. **No clona los recognizers**
@@ -596,17 +594,15 @@ impl SttEngine {
             }
         }
 
-        let spec = stt_model_by_id(model_id)
-            .ok_or_else(|| format!("modelo STT desconocido: {model_id}"))?;
-
-        // Descargar si hace falta.
+        // Descargar si hace falta. `ensure_stt_model_downloaded`
+        // valida internamente que el `model_id` sea conocido.
         ensure_stt_model_downloaded(model_id).await?;
 
         let dir = stt_model_dir(model_id)
             .ok_or_else(|| "no se pudo resolver stt_model_dir".to_string())?;
 
         // Despachar por tipo de motor.
-        let (engine_kind, online, online_config, offline_arc, offline_config, sample_rate) =
+        let (engine_kind, online_config, offline_arc, offline_config, sample_rate) =
             if model_id.contains("whisper") {
                 let (rec, cfg) = build_offline_whisper(&dir, model_id)?;
                 // Cachear el recognizer en `Arc` para que el primer
@@ -615,17 +611,18 @@ impl SttEngine {
                 (
                     SttEngineKind::OfflineWhisper,
                     None,
-                    None,
                     offline_arc,
                     Some(cfg),
                     16000,
                 )
             } else {
-                // Por defecto: streaming Zipformer.
-                let (rec, cfg) = build_online_zipformer(&dir)?;
+                // Por defecto: streaming Zipformer. El recognizer se
+                // recrea bajo demanda desde `online_config` en
+                // `online_recognizer_clone_blocking`, así que aquí solo
+                // guardamos la config.
+                let (_, cfg) = build_online_zipformer(&dir)?;
                 (
                     SttEngineKind::StreamingZipformer,
-                    Some(rec),
                     Some(cfg),
                     None,
                     None,
@@ -636,7 +633,6 @@ impl SttEngine {
         let inner = SttInner {
             model_id: model_id.to_string(),
             engine_kind,
-            online,
             online_config,
             offline_arc,
             offline_config,

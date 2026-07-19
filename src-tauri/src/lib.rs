@@ -51,7 +51,6 @@ use log::{debug, error, info, warn};
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use sherpa_onnx::OnlineRecognizer;
 use std::path::PathBuf;
 use std::ptr;
 use std::sync::atomic::{AtomicPtr, Ordering};
@@ -479,6 +478,7 @@ impl DeviceIdentity {
     /// v2 que ya validamos contra el gateway.
     ///
     /// Devuelve `(payload, signature_base64url)`.
+    #[allow(clippy::too_many_arguments)] // los 7 args mapean 1:1 a los campos del payload v2 de OpenClaw
     pub fn sign_v2(
         &self,
         client_id: &str,
@@ -1391,6 +1391,7 @@ async fn chat_and_speak(
 ///   - `deltaText`: chunks streaming de la respuesta del LLM (eventos `chat`).
 ///   - `message`: mensaje final del turno (evento terminal `chat`).
 ///   - `text`, `content`: legacy / otros canales.
+///
 /// Si no encuentra ninguno, devuelve cadena vacía.
 fn extract_text_chunk(payload: &serde_json::Value) -> String {
     for key in ["deltaText", "message", "text", "content", "delta"] {
@@ -1562,7 +1563,7 @@ pub fn cli_test_handshake(gateway_url: &str, token: Option<&str>) -> i32 {
             "params": connect_params,
         });
         let text = serde_json::to_string(&connect).map_err(|e| format!("serializar: {e}"))?;
-        ws.send(Message::Text(text.into()))
+        ws.send(Message::Text(text))
             .await
             .map_err(|e| format!("enviar connect: {e}"))?;
         info!("[cli-handshake] connect enviado");
@@ -1941,16 +1942,6 @@ async fn send_request_and_wait(
         // Buscar en el inbox una res con nuestro id.
         {
             let mut inbox = state.inbox.lock().expect("inbox poisoned");
-            for (idx, ev) in inbox.iter().enumerate() {
-                if ev.event == "__raw_res__" {
-                    // Truco: cuando el inbox recibe una `res`, el evento
-                    // pump ya la descartó (ver run_event_pump). Necesitamos
-                    // otro mecanismo: escuchar el inbox como GatewayEvent
-                    // parseado. Usamos un canal auxiliar: guardamos la
-                    // res en el inbox con un evento "res" y un campo id
-                    // en el payload.
-                }
-            }
             // Búsqueda más simple: si el evento tiene el formato `res`
             // guardado (lo detectamos por la presencia de un campo `id`
             // en el payload que coincida), lo extraemos.
@@ -2168,18 +2159,6 @@ async fn stt_start(
                     .unwrap_or(false)
         })
         .unwrap_or(false);
-    // Verificar si está en el bundle.
-    let in_bundle = |mid: &str| -> bool {
-        use std::sync::atomic::AtomicPtr;
-        use std::sync::atomic::Ordering;
-        // BUNDLE_RESOURCE_DIR es OnceLock, ya inicializado en setup.
-        // No podemos accederlo aquí directamente, pero podemos verificar
-        // si el directorio del modelo existe.
-        if let Some(d) = &model_dir {
-            return d.exists();
-        }
-        false
-    };
     if !model_available_offline && id != DEFAULT_STT_MODEL_ID {
         // El modelo no está descargado y no es el default. Intentar
         // con el default (whisper-base) que está en el bundle.
@@ -2442,25 +2421,21 @@ async fn stt_start(
 
     // Guardar el stream y el stop_tx como punteros crudos en globales.
     let boxed_stream = Box::new(audio_stream);
-    let raw_stream = Box::into_raw(boxed_stream) as *mut cpal::Stream as *mut ();
+    let raw_stream = Box::into_raw(boxed_stream) as *mut ();
     let stop_tx_box = Box::new(stop_tx);
-    let raw_stop_tx = Box::into_raw(stop_tx_box) as *mut mpsc::Sender<()> as *mut ();
+    let raw_stop_tx = Box::into_raw(stop_tx_box) as *mut ();
     let recognizer_thread_box = Box::new(recognizer_thread);
-    let raw_thread =
-        Box::into_raw(recognizer_thread_box) as *mut std::thread::JoinHandle<()> as *mut ();
+    let raw_thread = Box::into_raw(recognizer_thread_box) as *mut ();
     // Guardar el samples_tx en la variable estática para que NO se
     // drope al final de este comando (de lo contrario, el canal
     // mpsc se cierra, el samples_rx del hilo retorna error y el
     // hilo termina sin haber recibido ningún sample).
     let samples_tx_box = Box::new(samples_tx);
-    let raw_samples_tx =
-        Box::into_raw(samples_tx_box) as *mut mpsc::SyncSender<Vec<f32>> as *mut ();
-    unsafe {
-        STT_AUDIO_STREAM.store(raw_stream, Ordering::Release);
-        STT_STOP_TX.store(raw_stop_tx, Ordering::Release);
-        STT_THREAD.store(raw_thread, Ordering::Release);
-        STT_SAMPLES_TX.store(raw_samples_tx, Ordering::Release);
-    }
+    let raw_samples_tx = Box::into_raw(samples_tx_box) as *mut ();
+    STT_AUDIO_STREAM.store(raw_stream, Ordering::Release);
+    STT_STOP_TX.store(raw_stop_tx, Ordering::Release);
+    STT_THREAD.store(raw_thread, Ordering::Release);
+    STT_SAMPLES_TX.store(raw_samples_tx, Ordering::Release);
 
     info!("[stt] sesión de dictado activa (modelo {id})");
 

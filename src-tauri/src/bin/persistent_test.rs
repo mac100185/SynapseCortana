@@ -129,7 +129,7 @@ async fn main() {
         }
     });
     let text = serde_json::to_string(&connect).unwrap();
-    ws.send(Message::Text(text.into())).await.expect("send");
+    ws.send(Message::Text(text)).await.expect("send");
 
     let resp_raw = tokio::time::timeout(std::time::Duration::from_secs(10), ws.next()).await;
     match resp_raw {

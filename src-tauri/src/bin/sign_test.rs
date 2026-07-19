@@ -1,8 +1,6 @@
 // src-tauri/src/bin/sign_test.rs
 // Construye el payload v3 y v2 del device-auth, firma con Ed25519,
 // y muestra el payload en hex + la firma en hex para comparar con Python.
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use base64::Engine as _;
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use sha2::{Digest, Sha256};
