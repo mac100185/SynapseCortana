@@ -9,7 +9,7 @@ Uso:
 import asyncio
 import json
 import sys
-import websockets
+from websockets import serve  # type: ignore  # sin stubs para websockets 10.4 (apt)
 
 
 async def handle(ws):
@@ -51,7 +51,7 @@ async def handle(ws):
 
 async def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 18790
-    async with websockets.serve(handle, "127.0.0.1", port):
+    async with serve(handle, "127.0.0.1", port):
         print(f"[mock] WS server en ws://127.0.0.1:{port}/")
         await asyncio.Future()  # run forever
 

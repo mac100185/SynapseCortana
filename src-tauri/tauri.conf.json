@@ -1,5 +1,4 @@
 {
-  "$schema": "https://v2.tauri.app/schemas/config.schema.json",
   "build": {
     "frontendDist": "../frontend"
   },
