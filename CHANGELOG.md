@@ -36,7 +36,7 @@ Todos los cambios notables de SynapseCortana se documentan en este archivo.
 #### FASE 2.4 — Mejoras de UX
 - **FASE 2.4.A**: Pestañas Config/Chat, persistencia de settings, contraste en `<select>`, densidad visual
 - **FASE 2.4.B**: Selector dinámico de `sessionKey` vía `sessions.list` del gateway
-- **FASE 2.4.C**: STT con `sherpa-onnx` (Whisper base + Whisper tiny + streaming Zipformer)
+- **FASE 2.4.C**: STT con `sherpa-onnx` (Whisper medium + Whisper base; el streaming Zipformer se dejó de empaquetar y el default pasó a Whisper medium para dictado en español fiable)
 - **FASE 2.4.D**: Selector de micrófono (`stt_list_microphones`, `stt_set_microphone`)
 
 #### FASE 2.5 — Rendimiento

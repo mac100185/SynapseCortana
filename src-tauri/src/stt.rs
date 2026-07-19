@@ -1,26 +1,29 @@
 //! STT local open source (FASE 2.4.C).
 //!
-//! Wrapper alrededor de `sherpa-onnx` para reconocimiento de voz en
-//! streaming (OnlineRecognizer). Usa el modelo Zipformer-Transducer
-//! `sherpa-onnx-streaming-zipformer-en` (k2-fsa, 2023), que es multilingüe
-//! y es el ÚNICO modelo Zipformer streaming estable publicado oficialmente
-//! por k2-fsa a junio 2026. La captura de audio del micrófono se hace con
-//! `cpal` (ver el comando `stt_start` en `lib.rs`).
+//! Wrapper alrededor de `sherpa-onnx` para reconocimiento de voz. Soporta
+//! dos familias de modelos vía `SttEngineKind`:
+//!   - `OfflineWhisper` (default): modelos Whisper de OpenAI empaquetados
+//!     por k2-fsa. Procesan el audio completo al final de la utterance
+//!     (latencia ~1-3 s) y son multilingües nativos (entienden español).
+//!   - `StreamingZipformer`: streaming Zipformer-Transducer (OnlineRecognizer),
+//!     baja latencia (<300 ms). El código sigue presente para compatibilidad,
+//!     pero ningún modelo del catálogo actual lo selecciona.
 //!
-//! ## Modelo
+//! La captura de audio del micrófono se hace con `cpal` (ver el comando
+//! `stt_start` en `lib.rs`).
 //!
-//! - ID: `sherpa-onnx-streaming-zipformer-en` (k2-fsa, 2023, multilingüe).
-//! - Tamaño: ~310 MB en tarball.
-//! - Idioma: aunque el id dice `-en`, es multilingüe y transcribe español
-//!   razonablemente bien. No hay un modelo streaming Zipformer específico
-//!   para español en los releases oficiales de k2-fsa a fecha de hoy.
-//! - Salida: transcripción parcial cada N ms y final al detectar
-//!   fin de utterance (endpoint).
+//! ## Modelo por defecto
+//!
+//! - ID: `sherpa-onnx-whisper-medium` (k2-fsa, Whisper medium multilingüe).
+//! - Tamaño: ~900 MB en tarball.
+//! - Idioma: multilingüe nativo (99 idiomas), transcribe español con la
+//!   máxima calidad disponible en el catálogo.
+//! - Salida: transcripción final al procesar el audio completo (offline).
 //!
 //! ## Notas de implementación
 //!
-//! - El modelo se carga perezoso: la primera vez que se invoca `set_voice`
-//!   se descarga y se cachea en `~/.config/synapse-cortana/voices/<id>/`.
+//! - El modelo se carga perezoso: la primera vez que se invoca `set_model`
+//!   se descarga y se cachea en `~/.config/synapse-cortana/stt-models/<id>/`.
 //! - El reconocedor es `Send + Sync` pero NO clonable: lo guardamos
 //!   detrás de `Mutex` (no `AsyncMutex`) porque `accept_waveform` es
 //!   síncrona y rápida.
@@ -441,8 +444,8 @@ fn find_model_file(dir: &std::path::Path, prefix: &str) -> Option<std::path::Pat
 // ============================================
 
 /// Tipo de motor STT. El streaming Zipformer es el de baja latencia
-/// (OnlineRecognizer). Whisper tiny es offline (OfflineRecognizer) y
-/// procesa el audio completo al final.
+/// (OnlineRecognizer). Whisper (tiny/base/medium) es offline
+/// (OfflineRecognizer) y procesa el audio completo al final.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SttEngineKind {
     StreamingZipformer,
@@ -577,8 +580,9 @@ impl SttEngine {
 
     /// Carga el modelo STT si no está cargado. Equivalente a `tts_set_voice`.
     /// Detecta automáticamente el motor según el `model_id`:
-    ///   - `sherpa-onnx-streaming-zipformer-en` → `OnlineRecognizer` (streaming).
-    ///   - `sherpa-onnx-whisper-tiny` → `OfflineRecognizer` (Whisper).
+    ///   - cualquier ID que contenga `whisper` (tiny/base/medium) →
+    ///     `OfflineRecognizer` (Whisper, offline).
+    ///   - cualquier otro ID → `OnlineRecognizer` (streaming Zipformer).
     pub async fn set_model(&self, model_id: &str) -> Result<SttStatus, String> {
         // Verificar si el modelo ya está cargado. Si es el mismo model_id,
         // saltar la recarga (ahorra ~15s en modelos Whisper medium).

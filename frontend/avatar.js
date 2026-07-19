@@ -6,10 +6,9 @@
 //
 // Interacción:
 // - Click izquierdo simple: inicia/detiene dictado.
-// - Triple-click: cierra el avatar.
+// - Triple-click (<600ms): cierra el avatar.
 // - Click derecho: toggle chat.
 // - Rueda del mouse (scroll): gira el modelo manualmente.
-// - Doble-click: resetea rotación a frontal.
 // - Drag (arrastrar): mueve la ventana por la pantalla.
 
 import * as THREE from "./vendor/three.module.js";
@@ -351,7 +350,7 @@ canvas.addEventListener(
 // ============================================
 //
 // Click simple  → toggle dictado (inmediato, sin delay).
-// 3 clicks rápidos (en <500ms) → cerrar avatar.
+// 3 clicks rápidos (en <600ms) → cerrar avatar.
 // Click derecho → toggle ventana de chat.
 // Drag (>10px) → mover ventana.
 // Rueda         → girar modelo.

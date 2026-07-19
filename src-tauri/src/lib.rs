@@ -1177,10 +1177,10 @@ pub struct ChatAndSpeakResult {
 ///      eventos `chat`, `agent`, `chat.message`, `agent.message`,
 ///      `chat.delta`, `session.message`, `session.message.delta`.
 ///   3. Considera la respuesta "completa" cuando pasa
-///      `silence_timeout_ms` (por defecto 1500 ms) sin nuevos
+///      `silence_timeout_ms` (por defecto 3000 ms) sin nuevos
 ///      eventos que aporten texto, **o** cuando llega un evento
 ///      `chat.done` / `agent.done` / `chat.abort` / `agent.abort`.
-///   4. Si no llega nada en `overall_timeout_ms` (por defecto 60 s),
+///   4. Si no llega nada en `overall_timeout_ms` (por defecto 120 s),
 ///      devuelve error.
 ///
 /// Si el texto acumulado está vacío, no sintetiza audio y devuelve
@@ -2054,16 +2054,22 @@ async fn gateway_resolve_session(
 // Esta fase añade:
 //   - Captura de audio del micrófono con `cpal` (16 kHz mono PCM f32).
 //   - Resampling lineal del audio entrante (44.1/48 kHz → 16 kHz).
-//   - Reconocimiento en streaming con sherpa-onnx Zipformer.
-//   - Emisión de eventos `stt:partial` al frontend durante el dictado.
+//   - Reconocimiento con sherpa-onnx. El motor se selecciona según el
+//     `model_id`: cualquier ID que contenga `whisper` usa
+//     `OfflineRecognizer` (Whisper, offline); el resto usa
+//     `OnlineRecognizer` (streaming Zipformer). El catálogo actual
+//     solo incluye modelos Whisper (medium por defecto, base como
+//     alternativa más rápida).
+//   - Emisión de eventos `stt:partial` al frontend durante el dictado
+//     (en modo streaming) y `stt:final` al terminar.
 //   - Detección de endpoint (silencio al final de la frase) que detiene
-//     la captura automáticamente.
-//   - Binario CLI `--cli-test-stt` para validar sin GUI.
+//     la captura automáticamente en modo streaming.
 //
 // Requiere:
 //   - libasound2-dev en Linux (ya instalado en esta VM).
-//   - Modelo sherpa-onnx-streaming-zipformer-es (descargado por
-//     `SttEngine::set_model` la primera vez, ~150 MB).
+//   - Modelo sherpa-onnx-whisper-medium (descargado por
+//     `SttEngine::set_model` la primera vez, ~900 MB; o copiado desde
+//     el bundle en distribución offline).
 
 /// Devuelve el catálogo de modelos STT disponibles.
 #[tauri::command]

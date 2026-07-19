@@ -399,9 +399,9 @@ SynapseCortana/
 │   └── Cargo.toml          # Dependencias Rust
 ├── frontend/               # Frontend web (vanilla JS, sin framework)
 │   ├── index.html          # Ventana del chat (pestañas Config/Chat)
-│   ├── app.js              # Lógica del chat (~1100 líneas)
+│   ├── app.js              # Lógica del chat (~1320 líneas)
 │   ├── avatar.html         # Ventana del avatar (canvas + Three.js)
-│   ├── avatar.js           # Three.js + interacción (~420 líneas)
+│   ├── avatar.js           # Three.js + interacción (~440 líneas)
 │   ├── vendor/             # Three.js r170 local (sin CDN)
 │   │   ├── three.module.js
 │   │   └── GLTFLoader.js
