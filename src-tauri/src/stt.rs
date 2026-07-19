@@ -175,6 +175,13 @@ fn copy_stt_from_bundle(model_id: &str, target_dir: &Path) -> bool {
         .join("resources")
         .join("stt-models")
         .join(model_id);
+    // BUNDLE_RESOURCE_DIR puede apuntar al parent de `resources/` (AppImage)
+    // o a `resources/` mismo (dev/release). Probar ambas rutas.
+    let src = if src.exists() {
+        src
+    } else {
+        bundle_path.join("stt-models").join(model_id)
+    };
     if !src.exists() {
         return false;
     }

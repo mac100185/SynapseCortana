@@ -199,6 +199,13 @@ fn copy_voice_from_bundle(voice_id: &str, target_dir: &Path) -> bool {
         return false;
     };
     let src = bundle_path.join("resources").join("voices").join(voice_id);
+    // BUNDLE_RESOURCE_DIR puede apuntar al parent de `resources/` (AppImage)
+    // o a `resources/` mismo (dev/release). Probar ambas rutas.
+    let src = if src.exists() {
+        src
+    } else {
+        bundle_path.join("voices").join(voice_id)
+    };
     if !src.exists() {
         return false;
     }
