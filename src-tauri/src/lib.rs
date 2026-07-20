@@ -2867,10 +2867,10 @@ fn start_dragging(app: AppHandle) -> Result<(), String> {
     }
 }
 
-/// Cierra la ventana del avatar y TAMBIÉN cierra el chat y sale de
-/// la app. Usado por el triple-click. Sin esto, el proceso sigue
-/// corriendo después de cerrar el avatar y el usuario tiene que
-/// matarlo desde la terminal.
+// Cierra la ventana del avatar y TAMBIÉN cierra el chat y sale de
+// la app. Usado por el triple-click. Sin esto, el proceso sigue
+// corriendo después de cerrar el avatar y el usuario tiene que
+// matarlo desde la terminal.
 #[tauri::command]
 fn close_avatar_window(app: AppHandle) -> Result<(), String> {
     use tauri::Manager;
@@ -2891,7 +2891,14 @@ fn close_avatar_window(app: AppHandle) -> Result<(), String> {
         }
         let prev_thread = STT_THREAD.swap(ptr::null_mut(), Ordering::AcqRel);
         if !prev_thread.is_null() {
-            let _ = Box::from_raw(prev_thread as *mut std::thread::JoinHandle<()>);
+            let handle = Box::from_raw(prev_thread as *mut std::thread::JoinHandle<()>);
+            // Esperar a que el thread de Whisper termine antes de salir.
+            // Sin este join, el ONNX Runtime crashea al liberar recursos
+            // mientras la inferencia sigue en progreso.
+            match (*handle).join() {
+                Ok(()) => info!("[stt] thread terminado limpiamente (close_avatar)"),
+                Err(e) => info!("[stt] thread terminó con error: {:?}", e),
+            }
         }
     }
     // Cerrar ambas ventanas.
