@@ -421,7 +421,9 @@ canvas.addEventListener("click", (e) => {
     if (avatarState === "listening") {
       invoke("stt_stop").catch(() => {});
     } else {
-      invoke("stt_start", { modelId: null }).catch(() => {});
+      invoke("stt_start", { modelId: null }).catch((err) => {
+        console.warn("[avatar] stt_start rechazado:", err);
+      });
     }
   }
 

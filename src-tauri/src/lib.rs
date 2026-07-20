@@ -2098,6 +2098,16 @@ async fn stt_start(
 ) -> Result<(), String> {
     use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
+    // Evitar sesiones solapadas: si stt_stop está en progreso (join
+    // bloqueando mientras Whisper transcribe), rechazar el inicio de
+    // una nueva sesión. El usuario debe esperar a que termine el
+    // dictado anterior.
+    if STT_STOPPING.load(Ordering::Acquire) {
+        return Err(
+            "Espera a que termine el dictado anterior (procesando transcripción...)".to_string(),
+        );
+    }
+
     // FASE 3 fix: si no se pasa model_id, leer el modelo configurado en
     // settings. Si el modelo en settings no está disponible en el bundle
     // y no está descargado localmente, usar el default (whisper-base) que
@@ -2453,6 +2463,9 @@ async fn stt_start(
 /// Detiene la sesión de dictado actual.
 #[tauri::command]
 async fn stt_stop(app: AppHandle) -> Result<(), String> {
+    // Marcar que el stop está en progreso. stt_start rechazará nuevas
+    // sesiones mientras este flag esté activo (evita sesiones solapadas).
+    STT_STOPPING.store(true, Ordering::Release);
     unsafe {
         // Dropear el stream (cierra el audio).
         let prev_stream = STT_AUDIO_STREAM.swap(ptr::null_mut(), Ordering::AcqRel);
@@ -2493,6 +2506,7 @@ async fn stt_stop(app: AppHandle) -> Result<(), String> {
     let _ = app.emit("stt:state", serde_json::json!({"recording": false}));
     let _ = set_avatar_state("idle".to_string(), app.clone());
     info!("[stt] sesión detenida");
+    STT_STOPPING.store(false, Ordering::Release);
 
     // FASE 3: después de que el thread terminó, leer la transcripción
     // y manejar auto-send desde el thread principal (seguro).
@@ -2561,6 +2575,11 @@ static LAST_TRANSCRIPTION: std::sync::Mutex<String> = std::sync::Mutex::new(Stri
 /// cierra y el hilo termina con error "hilo de reconocimiento terminado"
 /// sin haber recibido ningún sample.
 static STT_SAMPLES_TX: AtomicPtr<()> = AtomicPtr::new(ptr::null_mut());
+
+/// Flag que indica que `stt_stop` está en progreso (bloqueado en `join()`).
+/// `stt_start` la consulta para rechazar nuevas sesiones mientras el stop
+/// del anterior aún no termina (evita sesiones solapadas).
+static STT_STOPPING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Resampling lineal de `from_hz` a `to_hz`. Suficiente para voz humana
 /// (no es alta calidad para música, pero la STT no lo nota).
@@ -2875,6 +2894,7 @@ fn start_dragging(app: AppHandle) -> Result<(), String> {
 fn close_avatar_window(app: AppHandle) -> Result<(), String> {
     use tauri::Manager;
     // Detener STT si está activo.
+    STT_STOPPING.store(true, Ordering::Release);
     unsafe {
         let prev_stream = STT_AUDIO_STREAM.swap(ptr::null_mut(), Ordering::AcqRel);
         if !prev_stream.is_null() {
