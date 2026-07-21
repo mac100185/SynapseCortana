@@ -2,6 +2,39 @@
 
 Todos los cambios notables de SynapseCortana se documentan en este archivo.
 
+## [0.1.1] — 2026-07-20
+
+### Bug fixes críticos
+
+- **Crash al cerrar app con STT activo**: `close_avatar_window` dropeaba el `JoinHandle` del thread de Whisper sin hacer `join()`, causando que el ONNX Runtime crasheara con `GetElementType is not implemented` al liberar recursos mientras la inferencia seguía en progreso. Ahora se hace `join()` antes de salir, igual que `stt_stop`.
+- **Voz TTS y modelo STT se descargaban de internet en vez de copiarse del bundle**: `copy_voice_from_bundle` y `copy_stt_from_bundle` construían la ruta con `bundle_path.join("resources").join(...)`, pero `BUNDLE_RESOURCE_DIR` en modo dev/release ya incluye `resources/`, produciendo una ruta inexistente `resources/resources/`. Ahora se prueban ambas rutas (con y sin `resources/` intermedio). La app ahora cumple la promesa del README: 100% offline después de `download_models.sh`.
+- **Sesiones STT solapadas**: cuando el usuario hace click en el avatar para detener el dictado, `stt_stop` bloquea 8-25s en `join()` esperando a que Whisper termine. Durante ese tiempo, el usuario podía iniciar un nuevo dictado (`stt_start`), creando una sesión solapada que perdía la transcripción anterior. Añadido flag `AtomicBool STT_STOPPING` que `stt_start` consulta para rechazar nuevas sesiones mientras el stop del anterior aún no termina.
+
+### Limpieza de código
+
+- **Proyecto 100% limpio**: eliminados todos los warnings de `cargo check` (13 en lib + 6 en bins) y todos los lints de `cargo clippy` (14 adicionales). Cero warnings, cero errores en ambos.
+  - Imports muertos removidos (12): `OnlineRecognizer`, `debug`, `error`, `VerifyingKey`, `SystemTime`, `UNIX_EPOCH`, `Signature`, `Signer`, `SigningKey`, `OsRng`, `Digest`, `Sha256`
+  - Código muerto removido (4): closure `in_bundle` nunca invocado, loop con body vacío, campo `online` nunca leído, variable `spec` sin uso
+  - Construcciones redundantes simplificadas (12): bloque `unsafe` innecesario, casts no-op, `.into()` String→String, `&voice.id` → `voice.id`
+  - Visibilidad corregida: `SttInner` ahora `pub` con campos `pub(crate)`
+
+### Limpieza de documentación
+
+- **Comentarios y CHANGELOG sincronizados con el código**: el header de `stt.rs` describía streaming Zipformer como motor principal cuando el default es Whisper medium. El comentario de la sección STT en `lib.rs` prometía un CLI `--cli-test-stt` que no existe. Defaults del doc-comment de `chat_and_speak` corregidos (1500ms→3000ms, 60s→120s). `avatar.js`: eliminada mención de doble-click inexistente, corregido `<500ms`→`<600ms`.
+- **`tauri.conf.json`**: removido `$schema` que apuntaba a URL 404 (el sitio de Tauri se reorganizó).
+- **`mock_gateway.py`**: fix de type checker — `from websockets import serve` con `# type: ignore` (la librería 10.4 de apt no incluye type stubs).
+
+### Verificación E2E
+
+Probado por el usuario en AppImage real contra gateway OpenClaw:
+- ✅ AppImage arranca 100% offline (voz + STT + GStreamer copiados del bundle)
+- ✅ Conexión al gateway (protocol v4, hello-ok)
+- ✅ Chat texto → LLM → TTS (4 ciclos completos)
+- ✅ STT dictado → transcripción → auto-send (3 transcripciones correctas en español)
+- ✅ Triple-click con STT activo: cierra limpio (sin crash)
+- ✅ Sesiones STT no solapadas
+- ✅ Conversación idéntica entre dashboard OpenClaw y SynapseCortana
+
 ## [0.1.0] — 2026-06-29
 
 ### FASE 1: El Cascarón Conectivo ✅

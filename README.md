@@ -30,15 +30,15 @@ Inspirado en la naturaleza simbiótica de Cortana en la Silver Timeline de Halo,
 
 ### Opción A — Descargar el AppImage (recomendado, sin compilar)
 
-1. Ir a la página de [Releases](https://github.com/usuario/SynapseCortana/releases) del repositorio
-2. Descargar `Synapse Cortana_0.1.0_amd64.AppImage` (771 MB, incluye todo: voz TTS + modelo STT + plugins de audio)
+1. Ir a la página de [Releases](https://github.com/mac100185/SynapseCortana/releases) del repositorio
+2. Descargar `Synapse Cortana_0.1.1_amd64.AppImage` (771 MB, incluye todo: voz TTS + modelo STT + plugins de audio)
 3. **Dar permisos de ejecución**:
    ```bash
-   chmod +x "Synapse Cortana_0.1.0_amd64.AppImage"
+   chmod +x "Synapse Cortana_0.1.1_amd64.AppImage"
    ```
 4. **Ejecutar**:
    ```bash
-   .//"Synapse Cortana_0.1.0_amd64.AppImage"
+   .//"Synapse Cortana_0.1.1_amd64.AppImage"
    ```
 
 Sin necesidad de `sudo`, sin dependencias externas, sin descargas de internet. El AppImage incluye todos los modelos pre-empaquetados.
@@ -54,7 +54,7 @@ Si tu gateway de OpenClaw está en otra máquina (ej. un servidor o VM), puedes 
 ssh -L 18789:127.0.0.1:18789 cortana@192.168.1.59 -N
 
 # Terminal 2: ejecutar SynapseCortana
-./"Synapse Cortana_0.1.0_amd64.AppImage"
+./"Synapse Cortana_0.1.1_amd64.AppImage"
 ```
 
 Luego en la aplicación:
@@ -141,7 +141,7 @@ sudo apt install libwebkit2gtk-4.1-dev libasound2-dev pkg-config librsvg2-dev
 #### Build
 
 ```bash
-git clone https://github.com/usuario/SynapseCortana.git
+git clone https://github.com/mac100185/SynapseCortana.git
 cd SynapseCortana
 
 # IMPORTANTE: descargar modelos TTS + STT + GStreamer antes de compilar

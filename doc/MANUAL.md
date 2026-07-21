@@ -145,8 +145,6 @@ SynapseCortana guarda todo en:
 │   └── es_AR-daniela-high/
 ├── stt-models/             # Modelos STT extraídos del bundle
 │   └── sherpa-onnx-whisper-medium/
-├── stt-models/             # Modelos STT extraídos del bundle
-│   └── sherpa-onnx-whisper-medium/
 ├── tts-cache/              # Caché de audio WAV (hash SHA-256 del texto)
 └── gstreamer-plugins/     # Plugins de GStreamer extraídos del bundle
 ```
@@ -167,6 +165,9 @@ Para **resetear** la aplicación a estado inicial: borrar `~/.config/synapse-cor
 | La app se cierra sola | Triple-click accidental | Evitar 3 clicks rápidos en el avatar. Un solo click es suficiente para dictar |
 | El avatar no aparece | La ventana del avatar se cerró o está detrás de otras ventanas | Reiniciar la aplicación |
 | Mensajes truncados | `silence_timeout_ms` muy bajo para el LLM usado | Aumentar a 5000ms en Configuración → "Silencio para fin de respuesta" |
+| El dictado demora en mostrar la transcripción | Whisper medium es un modelo **offline**: procesa todo el audio después de detener el dictado (8-25s según duración) | Esperar a que aparezca el texto en el input. Para menor latencia, usar Whisper base en Configuración |
+| No puedo iniciar un nuevo dictado | El dictado anterior aún se está procesando (Whisper transcribiendo) | Esperar a que termine la transcripción anterior (aparecerá en el input). El sistema bloquea nuevas sesiones hasta que termine |
+| La app crashea al cerrar con dictado activo | ~~Bug arreglado en v0.1.1~~ | Si persiste, actualizar a la última versión |
 | Logs muy verbosos | RUST_LOG en nivel debug/trace | Usar `RUST_LOG=info` o `RUST_LOG=warn` para menos detalle |
 
 ---
